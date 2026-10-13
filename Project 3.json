@@ -1,0 +1,259 @@
+{
+  "name": "Project 3",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4c89ed7c-c402-4f83-a00d-651296ac78f5",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Incoming Customer Orders:\n{{ JSON.stringify($json.orders) }}\n\nAnalyze every order according to company shipping, delay, and return policies. Decide priority, flag operational actions, and compile an executive summary report.",
+        "options": {
+          "systemMessage": "=You are an Autonomous E-Commerce Operations & Escalation AI Agent.\nAnalyze customer orders against strict store policies:\n1. Standard delivery is 3-5 business days. If days_in_transit > 5, flag as HIGH PRIORITY courier escalation.\n2. Damaged items require proof verification (unboxing video within 24 hours of delivery).\n3. In-transit orders within standard window get a reassuring tracking update draft.\n\nOUTPUT REQUIREMENTS:\nGenerate an executive summary report with:\n- Summary Stats (Total orders scanned, urgent escalations count)\n- Order-by-Order Breakdown (Order ID, Customer, Issue, Decision/Action, Suggested Reply Draft)\n- Courier Alert (Flag any delivery partner showing repeated SLA delays)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        528,
+        -16
+      ],
+      "id": "aa26b0d3-67fa-4afa-ba9d-05adec149907",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        144
+      ],
+      "id": "f6e1dd76-d103-4e18-90e5-1a74a7806e9f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "0Kvs7IHZq2RKwbMt",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "\"Use this tool to search store delivery, refund, and damaged parcel policies.\"",
+        "tableName": {
+          "__rl": true,
+          "value": "customer_orders",
+          "mode": "list",
+          "cachedResultName": "customer_orders"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        112
+      ],
+      "id": "306e8a2e-2a29-4feb-bf48-26f5adfea0f0",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "6n8Is21aDUmY5snK",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        640,
+        208
+      ],
+      "id": "f7619a48-8b1b-444c-aaaa-95015ddad9e0",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "0Kvs7IHZq2RKwbMt",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appoRdoKkmhQQFO4t",
+          "mode": "list",
+          "cachedResultName": "Project 3",
+          "cachedResultUrl": "https://airtable.com/appoRdoKkmhQQFO4t"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblyvbmvbQxGEJ4j0",
+          "mode": "list",
+          "cachedResultName": "customer_orders",
+          "cachedResultUrl": "https://airtable.com/appoRdoKkmhQQFO4t/tblyvbmvbQxGEJ4j0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "d710e6c7-bbc3-4f31-9826-710cc7e2ded4",
+      "name": "Search records",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "9yQDk6xATNhogpfv",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const orders = $input.all().map(item => item.json.fields);\nreturn [{ json: { orders } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -96
+      ],
+      "id": "f008b394-a302-420c-91ec-e738ef4da019",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "hassaanaziz434287@gmail.com",
+        "subject": "[URGENT] Daily Operations & Escalation Report - E-Commerce Ops",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        -64
+      ],
+      "id": "ea5ff545-252d-444b-ae67-a72ba0984e84",
+      "name": "Send a message",
+      "webhookId": "21cdf36a-5aaa-499c-b9ad-47501b59edcc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "83vJnmRM3rnuUNmq",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bf2f905e-8d8e-4bba-94b7-e57778bc08de",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "89b61708f89b675f91f092826f771b2a9df959b289fbb17effa5c605a4649b68"
+  },
+  "nodeGroups": [],
+  "id": "oird5pgJaIa7Nojo",
+  "tags": []
+}
